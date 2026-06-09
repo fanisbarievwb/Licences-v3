@@ -10,7 +10,7 @@ async function checkStatus() {
     resultDiv.textContent = "Загрузка...";
     
     // ВСТАВЬТЕ ВАШ URL ИЗ GOOGLE APPS SCRIPT ВМЕСТО ЭТОЙ ССЫЛКИ
-    const SCRIPT_URL = "https://google.com";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzT6nwd7Zom_7tVe8UyVn9nZrZyGwasaFGx09--MjDwWfnKVJ5PcXbTD4H8fKkLcPdyZQ/exec";
 
     try {
         const response = await fetch(`${SCRIPT_URL}?id=${id}`);
