@@ -3,21 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Проверка прав сотрудника</title>
+    <title>Статус прав сотрудника</title>
     <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-        input { padding: 10px; font-size: 16px; width: 200px; }
-        button { padding: 10px 15px; font-size: 16px; cursor: pointer; }
-        #result { margin-top: 20px; font-size: 18px; font-weight: bold; }
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s, ring 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .result-container {
+            margin-top: 2rem;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            background-color: #f1f5f9;
+            display: none; /* Скрыто по умолчанию */
+            animation: fadeIn 0.3s ease-in-out;
+            text-align: left;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .result-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-admin {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        .status-user {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
     </style>
 </head>
 <body>
-    <h2>Проверка прав по ID</h2>
-    <input type="text" id="employeeId" placeholder="Введите ID сотрудника">
-    <button onclick="checkStatus()">Проверить</button>
-    
-    <div id="result"></div>
 
-    <script src="script.js"></script>
+    <div class="container">
+        <h1>Проверка прав</h1>
+        <p class="subtitle">Введите ID сотрудника для получения статуса доступа</p>
+        
+        <div class="input-group">
+            <label for="empId">ID сотрудника</label>
+            <input type="text" id="empId" placeholder="Например: EMP-8492" autocomplete="off">
+        </div>
+
+        <button onclick="checkStatus()">Проверить статус</button>
+
+        <div id="result" class="result-container">
+            <div class="result-header">Сотрудник</div>
+            <div id="employeeName" class="result-name">Имя Фамилия</div>
+            <div class="result-header">Уровень доступа</div>
+            <div>
+                <span id="employeeStatus" class="status-badge">Статус</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkStatus() {
+            const inputId = document.getElementById('empId').value.trim();
+            const resultContainer = document.getElementById('result');
+            const employeeName = document.getElementById('employeeName');
+            const employeeStatus = document.getElementById('employeeStatus');
+
+            if (!inputId) return alert('Пожалуйста, введите ID сотрудника');
+
+            // --- ИМИТАЦИЯ ЗАПРОСА К БАЗЕ ДАННЫХ ---
+            // В реальном проекте здесь будет логика fetch() к вашему серверу
+            const mockDatabase = {
+                "1": { name: "Алексей Смирнов", role: "Администратор", type: "admin" },
+                "2": { name: "Екатерина Иванова", role: "Пользователь", type: "user" },
+                "3": { name: "Дмитрий Попов", role: "Администратор", type: "admin" }
+            };
+
+            const user = mockDatabase[inputId];
+
+            // Отображение результатов
+            if (user) {
+                employeeName.textContent = user.name;
+                employeeStatus.textContent = user.role;
+                
+                // Присвоение стилей в зависимости от прав
+                if (user.type === 'admin') {
+                    employeeStatus.className = 'status-badge status-admin';
+                } else {
+                    employeeStatus.className = 'status-badge status-user';
+                }
+
+                resultContainer.style.display = 'block';
+            } else {
+                alert('Сотрудник с таким ID не найден');
+                resultContainer.style.display = 'none';
+            }
+        }
+        
+        // Позволяет нажимать Enter для проверки
+        document.getElementById('empId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkStatus();
+            }
+        });
+    </script>
 </body>
 </html>
