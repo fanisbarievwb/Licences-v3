@@ -30,7 +30,7 @@
             background: var(--card-bg);
             padding: 2.5rem;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
             text-align: center;
@@ -62,13 +62,11 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
             box-sizing: border-box;
         }
 
         input:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         button { 
@@ -80,7 +78,6 @@
             border: none;
             border-radius: 6px;
             cursor: pointer; 
-            transition: background-color 0.2s;
             white-space: nowrap;
         }
 
@@ -94,22 +91,23 @@
             border-radius: 6px;
             font-size: 1rem; 
             font-weight: 500;
-            display: none; /* Скрыт по умолчанию */
-            background-color: #F9FAFB;
+            display: none; /* Скрыт до нажатия кнопки */
             border: 1px solid var(--border-color);
         }
 
-        /* Стили для вывода разных статусов */
+        /* Стили для разных статусов (добавляются через JS) */
         #result.success {
             color: #065F46;
             background-color: #ECFDF5;
             border-color: #A7F3D0;
+            display: block; /* Показываем при успешном классе */
         }
 
         #result.error {
             color: #991B1B;
             background-color: #FEF2F2;
             border-color: #FCA5A5;
+            display: block; /* Показываем при классе ошибки */
         }
     </style>
 </head>
@@ -120,13 +118,35 @@
         <p>Введите ID сотрудника для получения информации о его доступе.</p>
         
         <div class="input-group">
-            <input type="text" id="employeeId" placeholder="ID сотрудника" aria-label="ID сотрудника">
+            <input type="text" id="employeeId" placeholder="ID сотрудника">
             <button onclick="checkStatus()">Проверить</button>
         </div>
         
         <div id="result"></div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Логика проверки прав
+        function checkStatus() {
+            const resultDiv = document.getElementById('result');
+            const inputVal = document.getElementById('employeeId').value.trim();
+            
+            // Если поле пустое, ничего не делаем
+            if (!inputVal) {
+                resultDiv.textContent = 'Пожалуйста, введите ID.';
+                resultDiv.className = 'error';
+                return;
+            }
+
+            // Имитация проверки (замените на вашу логику или запрос к API)
+            if (inputVal === '1' || inputVal === '100') {
+                resultDiv.textContent = 'Статус: Полный доступ (Администратор)';
+                resultDiv.className = 'success';
+            } else {
+                resultDiv.textContent = 'Статус: Доступ ограничен (Обычный пользователь)';
+                resultDiv.className = 'success';
+            }
+        }
+    </script>
 </body>
 </html>
