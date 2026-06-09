@@ -22,7 +22,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         body {
@@ -39,7 +39,7 @@
             background: var(--card-bg);
             padding: 40px;
             border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             width: 100%;
             max-width: 400px;
             border: 1px solid var(--border);
@@ -68,7 +68,6 @@
             font-size: 14px;
             font-weight: 500;
             margin-bottom: 8px;
-            color: var(--text-main);
         }
 
         input {
@@ -103,6 +102,12 @@
             background-color: var(--accent-hover);
         }
 
+        button:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
         .result {
             margin-top: 28px;
             padding: 16px;
@@ -118,47 +123,36 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .status-active {
-            background-color: #ecfdf5;
-            color: var(--success);
-            border: 1px solid #a7f3d0;
-        }
-
-        .status-limited {
-            background-color: #fffbeb;
-            color: var(--warning);
-            border: 1px solid #fde68a;
-        }
-
-        .status-error {
-            background-color: #fef2f2;
-            color: var(--error);
-            border: 1px solid #fecaca;
-        }
+        .status-active { background-color: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; }
+        .status-limited { background-color: #fffbeb; color: var(--warning); border: 1px solid #fde68a; }
+        .status-error { background-color: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <h1>Доступ сотрудника</h1>
-        <p class="subtitle">Введите ID для проверки уровня прав</p>
+        <p class="subtitle">База данных Google Sheets</p>
         
         <div class="form-group">
             <label for="employeeId">Идентификатор сотрудника</label>
-            <input type="text" id="employeeId" placeholder="Например: 101" autocomplete="off">
+            <input type="text" id="employeeId" placeholder="Введите ID..." autocomplete="off">
         </div>
         
-        <button onclick="checkPermissions()">Проверить статус</button>
+        <button id="submitBtn" onclick="checkPermissions()">Проверить статус</button>
         
         <div id="resultBox" class="result"></div>
     </div>
 
     <script>
-        function checkPermissions() {
+        // ВСТАВЬТЕ СЮДА ВАШ URL ИЗ GOOGLE APPS SCRIPT
+        const API_URL = 'ПЕРЕНЕСИТЕ_СЮДА_ВАШУ_ССЫЛКУ_ИЗ_ШАГА_1';
+
+        async function checkPermissions() {
             const idInput = document.getElementById('employeeId').value.trim();
             const resultBox = document.getElementById('resultBox');
+            const submitBtn = document.getElementById('submitBtn');
             
-            // Сброс стиля перед новой проверкой
             resultBox.className = 'result';
             resultBox.style.display = 'block';
 
@@ -168,25 +162,40 @@
                 return;
             }
 
-            // Имитация базы данных (демо-данные)
-            const mockDatabase = {
-                "101": { name: "Алексей Иванов", status: "Полный доступ (Администратор)", type: "active" },
-                "102": { name: "Мария Сидорова", status: "Ограниченный доступ (Менеджер)", type: "limited" },
-                "103": { name: "Иван Петров", status: "Доступ заблокирован", type: "error" }
-            };
+            // Индикация загрузки данных
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Поиск...';
+            resultBox.style.display = 'none';
 
-            const employee = mockDatabase[idInput];
+            try {
+                // Запрос к API Google Таблицы
+                const response = await fetch(`${API_URL}?id=${encodeURIComponent(idInput)}`);
+                const result = await response.json();
 
-            if (employee) {
-                resultBox.classList.add('status-' + employee.type);
-                resultBox.innerHTML = `<strong>${employee.name}</strong><br>${employee.status}`;
-            } else {
+                resultBox.style.display = 'block';
+
+                if (result.success) {
+                    const employee = result.data;
+                    // Подставляем класс цвета на основе поля type (active/limited/error)
+                    const statusClass = employee.type ? `status-${employee.type}` : 'status-limited';
+                    
+                    resultBox.classList.add(statusClass);
+                    resultBox.innerHTML = `<strong>${employee.name || 'Без имени'}</strong><br>${employee.status || 'Статус не указан'}`;
+                } else {
+                    resultBox.classList.add('status-error');
+                    resultBox.innerHTML = `Сотрудник с ID <strong>${idInput}</strong> не найден.`;
+                }
+            } catch (error) {
+                resultBox.style.display = 'block';
                 resultBox.classList.add('status-error');
-                resultBox.innerHTML = `Сотрудник с ID <strong>${idInput}</strong> не найден.`;
+                resultBox.innerHTML = 'Ошибка сети. Не удалось связаться с базой данных.';
+                console.error(error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Проверить статус';
             }
         }
 
-        // Позволяет отправлять форму по нажатию Enter
         document.getElementById('employeeId').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 checkPermissions();
